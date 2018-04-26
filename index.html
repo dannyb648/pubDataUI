@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Marstons Clayhanger</title>
+	<link rel="stylesheet" type="text/css" href="./style.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script>
+
+		function getMousePos(canvas, evt) {
+	        var rect = canvas.getBoundingClientRect();
+	        return {
+	          x: evt.clientX - rect.left,
+	          y: evt.clientY - rect.top
+	        };
+      	}
+
+      	tables = ['table1', 'table2', 'table3', 'table4', 'table5', 'booth1', 'booth2', 'booth3', 'standing1', 'standing2'];
+
+      	function checkCoords(mosPos){
+      		if(mosPos.x > 295 && mosPos.x < 420 && mosPos.y > 170 && mosPos.y < 300){
+      			return 'table1';
+      		} else if(mosPos.x > 580 && mosPos.x < 705 && mosPos.y >  170 && mosPos.y < 295) {
+      			return 'table2';
+      		} else if(mosPos.x > 435 && mosPos.x < 565 && mosPos.y > 315 && mosPos.y < 430) {
+      			return 'table3';
+      		} else if(mosPos.x > 290 && mosPos.x < 420 && mosPos.y > 450 && mosPos.y < 568){
+      			return 'table4';
+      		} else if(mosPos.x > 580 && mosPos.x < 700 && mosPos.y > 445 && mosPos.y < 565){
+      			return 'table5';
+      		} else if(mosPos.x > 0 && mosPos.x < 150 && mosPos.y > 150 && mosPos.y < 295){
+      			return 'booth1';
+      		} else if(mosPos.x > 0 && mosPos.x < 150 && mosPos.y > 300 && mosPos.y < 448){
+      			return 'booth2';
+      		} else if(mosPos.x > 0 && mosPos.x < 150 && mosPos.y > 450 && mosPos.y < 600){
+      			return 'booth3';
+      		} else if(mosPos.x > 245 && mosPos.x < 470 && mosPos.y > 20 && mosPos.y < 120){
+      			return 'standing1';
+      		} else if(mosPos.x > 500 && mosPos.x < 999 && mosPos.y > 0 && mosPos.y < 51){
+      			return 'standing2';
+      		} else if(mosPos.x > 835 && mosPos.x < 1000 && mosPos.y > 135 && mosPos.y < 600){
+      			return 'bar';
+      		} else {
+      			return null;
+      		}
+      	}
+
+		pub = {}
+
+		function displayData(table){
+			if(table != 'bar' && table){
+				console.log("clicked: " + table)
+				string = "<h4 class='rightbar'>" + table + "</h4>";
+				for(var patron = 0; patron < pub.tables[table].patrons.length; patron++){
+					string = string + '<div id="patron">\
+											<h5 id="patronName" class="rightbar">Name: ' + pub.tables[table].patrons[patron].name +'</h5>\
+											<p id="patronAge" class="rightbar">Age: ' + pub.tables[table].patrons[patron].age + '</p>\
+											<p id="patronGender" class="rightbar">Gender: ' + pub.tables[table].patrons[patron].gender + '</p>\
+											<p id="patronDrink" class="rightbar">Drink: ' + pub.tables[table].patrons[patron].beverage + '</p>\
+										</div>';
+				}
+
+				$("#dataBar").html(string);
+			} else if(table == 'bar'){
+				console.log("clicked: " + table)
+				string = "<h4 class='rightbar'>The Bar Queue</h4>";
+				for(var i = 0; i < pub.bar.length; i++){
+					console.log(i)
+					var t = pub.bar[i].table;
+					var s = pub.bar[i].buyerSeat;
+					string = string + '<div id="patron">\
+											<h5 id="patronName" class="rightbar">Name: ' + pub.tables[tables[t]].patrons[s].age +'</h5>\
+											<p id="patronAge" class="rightbar">Age: ' + pub.tables[tables[t]].patrons[s].age + '</p>\
+											<p id="patronGender" class="rightbar">Gender: ' + pub.tables[tables[t]].patrons[s].gender + '</p>\
+											<p id="patronDrink" class="rightbar">Drink: ' + pub.tables[tables[t]].patrons[s].beverage + '</p>\
+											<p id=patronTable" class="rightbar">Table: ' + tables[t] + '</p>\
+										</div>';
+				}
+				$("#dataBar").html(string);
+
+			}
+		}
+
+		window.onload = function(){
+			
+			c = document.getElementById("pubCanvas");
+			c.addEventListener('click', function(evt) {
+		        var mousePos = getMousePos(c, evt);
+		        var message = 'Mouse position: ' + mousePos.x + ',' + mousePos.y;
+		        var tableClicked = checkCoords(mousePos);
+		        if(tableClicked && tableClicked != 10){
+		        	displayData(tableClicked)
+		        }
+
+
+
+
+		    }, false);
+			ctx = c.getContext("2d");
+			ctx.fillStyle = 'green';
+			var background = new Image();
+			background.src = "./pub2.png";
+			background.onload = function(){
+		    	ctx.drawImage(background,0,0);   
+			}
+			$.getJSON("http://localhost:8080/api/pub/first", function(data){
+				pub = data[0]
+				$("#timestamp").html(convertTime(data[0].timestamp));
+				$("#weather").html('Weather: ' + data[0].weather);
+				$("#temp").html('Temp: ' + Math.floor(data[0].temp) + 'C');
+				$("#takings").html('Takings: £' + Math.round(data[0].takings * 100) / 100);
+			})
+		}
+
+
+
+		function drawPeople(timestamp){
+			ctx.clearRect(0,0,1000,600);
+			var background = new Image();
+			background.src = "./pub2.png";
+			background.onload = function(){
+		    	ctx.drawImage(background,0,0);   
+			}
+			$.getJSON("http://localhost:8080/api/pub/time/" + timestamp, function(data){
+				pub = data[0]
+				$("#timestamp").html(convertTime(data[0].timestamp));
+				$("#weather").html('Weather: ' + data[0].weather);
+				$("#temp").html('Temp: ' + Math.floor(data[0].temp) + 'C');
+				$("#takings").html('Takings: £' + Math.round(data[0].takings * 100) / 100);
+				$("#bar").html('Bar Queue: ' + data[0].bar.length);
+				
+				Object.keys(data[0].tables).forEach(function(key) {
+					if(data[0].tables[key].patrons.length > 0){
+						for(var i = 0; i < data[0].tables[key].patrons.length; i++){
+							if(data[0].tables[key].patrons[i].state.atBar != true){
+								console.log(key, data[0].tables[key].patrons[i]);
+								ctx.beginPath();
+								ctx.globalAlpha = 0.2;
+								ctx.fillStyle = '#9f7dcd';
+								var newX = (data[0].tables[key].patrons[i].x - 20) + (Math.random() * 40)
+								var newY = (data[0].tables[key].patrons[i].y - 20) + (Math.random() * 40)
+								ctx.arc(newX,
+									newY, 
+									50, 
+									0, 
+									2 * Math.PI);
+								ctx.fill();
+								ctx.strokeStyle="red";
+								ctx.stroke();
+								ctx.globalAlpha = 1;
+							}
+						}
+					}
+
+				});
+
+				for(var i = 0; i < pub.bar.length; i++){
+					console.log(pub.bar[i].table)
+					ctx.beginPath();
+					ctx.globalAlpha = 0.2;
+					ctx.fillStyle = '#9f7dcd';
+					var newX = 820
+					var newY = 250 + (i * 50)
+					ctx.arc(newX,
+					newY, 
+					50, 
+					0, 
+					2 * Math.PI);
+					ctx.fill();
+					ctx.strokeStyle="red";
+					ctx.stroke();
+					ctx.globalAlpha = 1;
+				}
+			})
+		}
+
+		function convertTime(timestamp){
+			 console.log(pub)
+			  var a = new Date(timestamp * 1000);
+			  var hour = a.getHours();
+			  var min = a.getMinutes();
+			  var sec = a.getSeconds();
+			  var time = ((hour > 9) ? hour : "0"+hour) + ':' + ((min > 9) ? min : "0"+min) + ':' + ((sec > 10) ? sec : "0"+sec) ;
+			  return time;
+		}
+
+		function backMins(){
+			if(pub.timestamp == 1520676000){
+				alert("Already beginning of Day");
+			} else {
+				drawPeople(pub.timestamp - 300);
+			}
+		}
+
+		function forwardMins(){
+			if(pub.timestamp == 1520729700){
+				alert("Already End of day")
+			} else {
+				drawPeople(pub.timestamp + 300);
+			}
+		}
+
+		function drawCanvas(){
+			console.log("Canvas Drawn")
+		}
+		// Make sure the image is loaded first otherwise nothing will draw.
+
+
+	</script>
+</head>
+<body>
+	<div id="app">
+		<div id="controlBar">
+			<button id="backButton" onclick="backMins()">- 5 Mins</button>
+			<p id="timestamp" class="ctrlbar">Timestamp</p>
+			<button id="frontButton" onclick="forwardMins()">+ 5 Mins</button>
+			<p id="temp" class="ctrlbar">Temp: 28oC </p>
+			<p id="weather" class="ctrlbar">Weather: Sunny </p>
+			<p id="takings" class="ctrlbar">Takings: £0</p>
+			<p id="bar" class="ctrlbar">Bar Queue: 0</p>
+		</div>
+		<div id="dataBar">
+			<div id="patron">
+				<h5 id='patronName' class='rightbar'>Select A Table</h5>
+				<p id="patronAge" class='rightbar'></p>
+				<p id="patronGender" class='rightbar'></p>
+				<p id="patronDrink" class='rightbar'></p>
+			</div>
+		</div>
+
+		<canvas id="pubCanvas" width="1000" height="600" style="border:1px solid">
+			
+		</canvas>
+		
+	</div>
+</body>
+</html>
